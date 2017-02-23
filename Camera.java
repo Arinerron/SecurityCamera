@@ -14,7 +14,7 @@ public class Camera implements WebcamMotionListener {
     // config
     final File directory = new File(new File(System.getProperty("user.home")), "securitycam"); // dir to store pics
     final long hours = 48; // keep photos for 48 hours
-    final long aftertime = 60; // start taking pictures again after 60 seconds has passed
+    final long aftertime = 60 * 60 * 48; // start taking pictures again after 48 hours has passed
 
     public Camera() {
         // create directory for images if it doesn't exist
@@ -33,9 +33,9 @@ public class Camera implements WebcamMotionListener {
             webcam.open();
 
         // set up motion detector
-		detector = new WebcamMotionDetector(webcam);
-		detector.setInterval(1000); // check every sec
-		detector.addMotionListener(this);
+	detector = new WebcamMotionDetector(webcam);
+	detector.setInterval(1000); // check every sec
+	detector.addMotionListener(this);
         detector.start();
     }
 
@@ -44,18 +44,16 @@ public class Camera implements WebcamMotionListener {
         // on motion sensed
         long currentEpoch = System.currentTimeMillis() / 1000L;
 
-        if(currentEpoch - lastEpoch > aftertime) { // if it has been more than a minute since last picture
+        if(currentEpoch - lastEpoch > aftertime) { // if it has been more than the set amount of time since last picture
             // then save the picture
-    		System.out.println("[" + currentEpoch + " || " + new Date().toString() + "] Saving image...");
+            System.out.println("[" + new Date().toString() + "] Saving image...");
             WebcamUtils.capture(webcam, new File(directory, "capture_" + currentEpoch).getAbsolutePath(), "jpg");
 
             // check for old pics
-            for(File f : directory.listFiles()) {
-                if(f.isFile()) {
+            for(File f : directory.listFiles()) 
+                if(f.isFile())
                     if(currentEpoch - Long.parseLong(f.getName().split(underscore)[1].split(dot)[0], 10) > hours * 60 * 60)
                         f.delete(); // delete old pics
-                }
-            }
         }
 
         // set latest timestamp
